@@ -17,4 +17,6 @@ agent = CodeAgent(
 )
 
 # 3. Run a task
-agent.run("Search for the current price of Ethereum and tell me how much 2.5 ETH is worth in USD.")
+#agent.run("Search for the current price of Ethereum and tell me how much 2.5 ETH is worth in USD.")
+
+agent.run("Find the current stock price of NVIDIA and calculate how many shares I could buy with $5000.")

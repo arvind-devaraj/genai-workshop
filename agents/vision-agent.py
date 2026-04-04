@@ -1,10 +1,14 @@
+"""
+https://images.sampletemplates.com/wp-content/uploads/2018/04/Detailed-Grocery-Payment-Receipt-Samples.jpg
+"""
+
+
 import pytesseract
 import requests
 from PIL import Image, ImageOps, ImageEnhance
 from io import BytesIO
 from smolagents import CodeAgent, LiteLLMModel, tool
 
-#https://images.sampletemplates.com/wp-content/uploads/2018/04/Detailed-Grocery-Payment-Receipt-Samples.jpg
 
 # 1. Setup Gemma 3 4B (Local via Ollama)
 # Run 'ollama pull gemma3:4b' first!

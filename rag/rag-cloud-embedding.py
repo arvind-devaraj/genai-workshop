@@ -1,3 +1,5 @@
+#basic RAG with llamaindex gemini embedding
+
 import os
 from llama_index.core import VectorStoreIndex, Document, Settings
 from llama_index.llms.google_genai import GoogleGenAI

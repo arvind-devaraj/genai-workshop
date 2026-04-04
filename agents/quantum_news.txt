@@ -1,6 +1,0 @@
-
-*   **IBM (2025):** Unveiled new quantum processors, software, and algorithms aimed at achieving quantum advantage by 2026 and fault-tolerant quantum computing by 2029.
-*   **IBM (2025):** Continued progress towards building logical qubits with repeatable error suppression.
-*   **Google (2024):** Developed a new quantum chip called Willow, which significantly reduces errors as it scales up.
-*   **Quantum Computing Market (2025):** The quantum computing market is forecast to surpass US$10B by 2045 with a CAGR of 30%.
-*   **General (2025):** Quantum computing raised over $1.2 billion in capital in the first quarter of 2025 alone.
