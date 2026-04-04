@@ -1,5 +1,12 @@
 """
+
+Please scan this receipt: 
+
 https://images.sampletemplates.com/wp-content/uploads/2018/04/Detailed-Grocery-Payment-Receipt-Samples.jpg
+
+    "1. Extract the Merchant Name, Date, and the Grand Total.\n"
+    "2. Calculate a 12% tax on that total and tell me the final amount.\n"
+    "3. Format your answer as a clean summary.
 """
 
 
