@@ -1,24 +1,20 @@
-from smolagents import CodeAgent, DuckDuckGoSearchTool, LiteLLMModel, tool
+from smolagents import CodeAgent, LiteLLMModel, tool
 
-# 1. Define the tool with a docstring (smolagents uses this for instructions)
 @tool
-def get_weather(city: str) -> str:
+def get_weather(city: str) -> float:
     """
-    Tells you the current weather in a specific city.
+    Returns the current temperature in Celsius for a given city.
     Args:
         city: The name of the city.
     """
-    # Imagine this calls a real API
-    return "22°C and Sunny"
+    # Mock data logic
+    data = {"tokyo": 22.0, "new york": 15.0}
+    return data.get(city.lower(), 20.0)
 
-# 2. Setup the model (pointing to your local Ollama instance)
-model = LiteLLMModel(
-    model_id="ollama/gemma3:4b", 
-    api_base="http://localhost:11434"
-)
+model = LiteLLMModel(model_id="ollama/gemma3:4b", api_base="http://localhost:11434")
 
-# 3. Initialize the Agent
-agent = CodeAgent(tools=[get_weather], model=model)
+# We use CodeAgent because it's great at 'multi-hop' logic 
+# (it can even do the math itself in Python!)
+agent = CodeAgent(tools=[get_weather], model=model, add_base_tools=True)
 
-# 4. Run it
-agent.run("What should I wear in Tokyo today?")
+agent.run("Is it warmer in Tokyo or New York right now, and what is the difference?")
