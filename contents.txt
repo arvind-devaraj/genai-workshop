@@ -1,0 +1,31 @@
+5.1.2 Quantization Approaches 125
+Instead, 8-bit floating-point formats (FP8, MXFP8) are generally the sweet
+spot for improving performance without sacrificing quality. FP4 is prom-
+ising, especially the NVFP4 format which introduces a higher level of
+granularity for improved accuracy, but FP8 and MXFP8 provide the most
+flexibility, especially when quantizing the KV cache.
+5.1.2 Quantization Approaches
+The more parameters a model has, the less sensitive it is to quantization
+as each individual parameter is less important. However, even for very
+large models, it is essential to quantize carefully.
+Quantization can happen during or after training:
+• Quantization-aware training: Training weights and computing scale
+factors together to ensure that the final converged weights are accurate
+at a given precision.
+• Post-training quantization: Converting finished model weights to a
+new precision by computing scale factors and preserving accuracy via
+calibration.
+While some labs release models created with quantization-aware training,
+like GPT-OSS in MXFP4 and Kimi K2 Thinking in INT4, inference engi-
+neers working with open models only have the ability to perform post-train-
+ing quantization as they are working with finished weights.
+A leading tool for post-training quantization is NVIDIA TensorRT Model
+Optimizer (ModelOpt), an open-source library that also supports pruning,
+distillation, and sparsity. ModelOpt outputs are compatible with all infer-
+ence engines (vLLM, SGLang, TensorRT-LLM).
+After picking a precision, there are two decisions to make before doing
+post-training quantization:
+1. What parts of the model (weights, activations, KV cache, attention)
+should be quantized?
+2. What number format offers the appropriate dynamic range and granu-
+larity?

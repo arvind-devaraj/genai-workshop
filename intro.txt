@@ -1,0 +1,3 @@
+LLM Foundations: From Architecture to  Agents
+Summary:
+This talk explores the evolution of Large Language Models, beginning with the Transformer architecture. It demystifies how embeddings and vector math enable semantic understanding before diving into applications like RAG. Finally, we cover how reasoning and tool calling empower the next generation of autonomous AI agents.
