@@ -4,22 +4,41 @@ with open('contents.txt', 'r', encoding='utf-8') as file:
     data = file.read()
     #print(data)
 
+schema = {
+  "type": "object",
+  "properties": {
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "content": { "type": "string" }
+        },
+        "required": ["title", "content"]
+      }
+    }
+  },
+  "required": ["sections"]
+}
 
 prompt = f"""
+Act as an experienced podcast scriptwriter.  Rewrite the following text into a single paragraph.
 
-Rewrite the text below into a clean, spoken-word summary for an audio recording. Follow these constraints strictly:
+Guidelines:
 
-NO STAGE DIRECTIONS: Do not include any parentheticals, sound descriptions, mood cues, or stage directions (e.g., "(gentle voice)", "(music plays)").
+Conversational Tone: Like a podcast, use natural, spoken language. Use "we," "you," and "I" to engage the listener.
 
-NO FORMATTING LABELS: Do not use headers like "Intro," "Summary," or "Audio Cues."
+Add Transitions: Use smooth verbal transitions between sections (e.g., "Moving on to," "Next up is," "Think of this like...").
 
-NO PREAMBLE: Start the output immediately with the first word of the content. Do not say "Here is the summary."
+Maintain Structure: Keep the main points organized logically, but ensure the formatting is appropriate for a script (e.g., headings that act as signposts).
 
-Start with the line "this page"
+Preserve Integrity: Keep the technical facts accurate; do not lose the meaning, just change the delivery.
 
- Here is the text: {data} """
+
+ Here is the text: {data}  """
 response = ollama.chat(
-    model='gemma3:270m',
+    model='qwen2.5:1.5b',
     messages=[{'role': 'user', 'content': prompt}]
 )
 

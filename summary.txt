@@ -1,1 +1,13 @@
-This page provides an overview of quantization approaches, highlighting the benefits and drawbacks of each method. The text emphasizes the importance of careful consideration when choosing quantization strategies for models of varying sizes and complexity. It also outlines the common methods used in post-training quantization, such as Quantization-Aware Training and Post-Training Quantization. Finally, it lists the leading tools for post-training quantization, including NVIDIA TensorRT Model Optimizer, and discusses the limitations of each approach in terms of model size, inference speed, and accuracy.
+Locality-sensitive hashing (LSH), developed by Indyk and Motwani in 1999, is a powerful algorithm that leverages vector similarities to enhance efficiency. By hashing similar vectors into the same buckets, it accelerates similarity searches while sacrificing some accuracy for speed. LSH is notably used with FAISS and Annoy.
+
+Hierarchical Navigable Small World (HNSW), introduced by Malkov and Yashunin in 2016, constructs a multi-layer graph where nodes represent vectors and edges connect similar vectors. This approach enables nearest-neighbor searches through traversing these graph edges. The implementation of HNSW is open-source and can be found in FAISS, Milvus, and other vector search libraries.
+
+Product quantization (Jégou et al., 2011) reduces each vector into a simpler representation by decomposing it into multiple subvectors. This method speeds up distances computation using lower-dimensional representations, making it essential for FAISS and supported in most popular vector search libraries.
+
+Inverted file indexing (IVF), pioneered by Sivic and Zisserman in 2003, organizes similar vectors into the same cluster via K-means clustering. Depending on the database’s size, setting an appropriate number of clusters ensures a manageable amount of data within each cluster, facilitating efficient querying with IVF.
+
+Annoy (Approximate Nearest Neighbors Oh Yeah), developed by Bernhardsson in 2013, is based on tree-based approaches and builds multiple binary trees to split vectors into clusters. During searches, it traverses these trees to find the closest centroid of the query embedding, narrowing down candidate neighbors. Annoy’s implementation has been open-sourced for Spotify.
+
+In addition to LSH, HNSW, and IVF, vector databases also include other algorithms like Microsoft’s SPTAG (Space Partition Tree And Graph) and FLANN (Fast Library for Approximate Nearest Neighbors). Vector databases are not limited to their own emergence; many traditional databases have extended or will extend to support vector storage and search capabilities.
+
+RAG | 263
