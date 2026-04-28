@@ -2,17 +2,18 @@ import json
 import hashlib
 import requests
 import timeout_decorator
+import os
 
 API_URL = "https://api.v7.unrealspeech.com/speech"
 
-API_TOKEN = 'J4AmBk60TbnT49slRIKYW1LyoCoyVsKYwQQjp6mGJHpsip6VVwYCsD'  # Replace with your actual API token
+API_TOKEN = os.environ.get('UNREAL_TOKEN')
 
 prefix=len("https://unreal-expire-in-90-days.s3-us-west-2.amazonaws.com/")
 suffix=len(".mp3")
 
 
 
-@timeout_decorator.timeout(5)
+@timeout_decorator.timeout(7)
 def create_audio(content):
     response = requests.post(
                     API_URL,
