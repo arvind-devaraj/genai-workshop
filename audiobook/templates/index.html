@@ -16,6 +16,46 @@
         /* Optional: Custom color */
         :root { --plyr-color-main: #00b3ff; }
     </style>
+
+    <style>
+        /* Basic page styling */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* Player Container */
+        .player-container {
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Customizing Plyr Accent Color */
+        :root {
+            --plyr-color-main: #00b3ff; /* Deep Sky Blue */
+        }
+
+        .plyr--audio .plyr__controls {
+            background: transparent;
+            border: none;
+        }
+    </style>
 </head>
 <body>
 
