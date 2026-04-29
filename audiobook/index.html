@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Viewer with Jump Navigation</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        #controls { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
+        #pdf-canvas { border: 1px solid #ccc; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 100%; margin-top: 10px; }
+        input[type="number"] { width: 60px; padding: 5px; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+
+    <input type="file" id="file-input" accept="application/pdf">
+    
+    <div id="controls" style="display: none;">
+        <button id="prev-page">Previous</button>
+        
+        <span>Page:</span>
+        <input type="number" id="page-input" value="1" min="1">
+        <span>/ <span id="page-count"></span></span>
+        <button id="go-to-page">Go</button>
+
+        <button id="next-page">Next</button>
+    </div>
+
+    <canvas id="pdf-canvas"></canvas>
+
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        let pdfDoc = null,
+            pageNum = 1,
+            canvas = document.getElementById('pdf-canvas'),
+            ctx = canvas.getContext('2d');
+
+        const pageInput = document.getElementById('page-input');
+
+        const renderPage = (num) => {
+            pdfDoc.getPage(num).then((page) => {
+                const viewport = page.getViewport({ scale: 1.5 });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                page.render({ canvasContext: ctx, viewport: viewport });
+
+                // Update input field and state
+                pageInput.value = num;
+                pageNum = num;
+            });
+        };
+
+        const jumpToPage = () => {
+            const desiredPage = parseInt(pageInput.value);
+            if (desiredPage >= 1 && desiredPage <= pdfDoc.numPages) {
+                renderPage(desiredPage);
+            } else {
+                alert(`Please enter a page number between 1 and ${pdfDoc.numPages}`);
+            }
+        };
+
+        // File Loading
+        document.getElementById('file-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = () => {
+                pdfjsLib.getDocument(new Uint8Array(reader.result)).promise.then((pdf) => {
+                    pdfDoc = pdf;
+                    document.getElementById('page-count').textContent = pdf.numPages;
+                    pageInput.max = pdf.numPages;
+                    document.getElementById('controls').style.display = 'flex';
+                    renderPage(1);
+                });
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // Navigation Events
+        document.getElementById('prev-page').addEventListener('click', () => {
+            if (pageNum > 1) renderPage(pageNum - 1);
+        });
+
+        document.getElementById('next-page').addEventListener('click', () => {
+            if (pageNum < pdfDoc.numPages) renderPage(pageNum + 1);
+        });
+
+        // Jump Event
+        document.getElementById('go-to-page').addEventListener('click', jumpToPage);
+
+        // Allow pressing "Enter" to jump
+        pageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') jumpToPage();
+        });
+    </script>
+</body>
+</html>

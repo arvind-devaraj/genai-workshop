@@ -1,0 +1,7 @@
+In Chapter 7, we discuss "Finetuning," which is the process of refining a model to meet specific requirements. Unlike prompt-based methods that adapt models by giving them instructions or context, finetuning adjusts weights instead, enhancing various aspects of a model such as its domain-specific capabilities and instruction-following ability.
+
+Finetuning can significantly improve a model’s performance in tasks like coding or medical question answering. It also enhances safety, but is most often applied to ensure adherence to specific output styles and formats. While finetuning offers customization tailored to individual needs, it requires greater upfront investment due to higher memory requirements compared to foundational models.
+
+The chapter explores why finetuning should be used and when traditional large language models (LLMs) like RAG (Retrieval-Augmented Generation) might not require it. It introduces a simple framework for deciding between finetuning and alternative methods, highlighting the importance of understanding a model’s memory footprint to make informed decisions.
+
+Compared to prompt-based methods, finetuning significantly increases memory requirements on GPUs. This challenge has driven innovation towards more efficient approaches like PEFT (Parameter-Efficient Finetuning), which reduces memory needs while maintaining performance levels similar to traditional large language models.
