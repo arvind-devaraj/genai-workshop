@@ -16,12 +16,12 @@ def index():
 @app.route('/api/generate-speech', methods=['POST'])
 def generate_speech():
     data = request.json
-    page_num = data.get('text')
+    page_num = "1"
     page_num=page_num.strip()
     fp = open(f"data/page{page_num}.txt")
     text=fp.read()
     print(text)
-
+    #text="hello arvind"
     api_key = os.getenv('UNREAL_TOKEN')
 
     API_URL = "https://api.v7.unrealspeech.com/speech"
@@ -39,6 +39,7 @@ def generate_speech():
     }
 
     try:
+        print(payload)
         response = requests.post(API_URL, json=payload, headers=headers)
         print(response)
         print(response.json().get('OutputUri'))

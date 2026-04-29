@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Symphony Static Player - Debounced Build</title>
+    <title>Symphony Audio-Sync Player</title>
     <style>
         :root {
             --player-bg: #121212;
             --sidebar-bg: #000000;
             --accent: #1DB954;
-            --text-main: #ffffff;
             --text-dim: #b3b3b3;
             --toolbar-height: 100px;
             --sidebar-width: 260px;
+            --header-height: 30vh;
         }
 
         body, html {
             margin: 0; padding: 0;
             height: 100%; width: 100%;
-            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             background-color: var(--player-bg);
-            color: var(--text-main);
+            color: white;
             overflow: hidden;
         }
 
@@ -34,74 +34,61 @@
         .sidebar {
             width: var(--sidebar-width);
             background-color: var(--sidebar-bg);
+            border-right: 1px solid #282828;
             display: flex;
             flex-direction: column;
-            border-right: 1px solid #282828;
-            z-index: 20;
+            z-index: 30;
         }
 
-        .sidebar-header {
-            padding: 24px;
-            font-size: 11px;
-            font-weight: bold;
-            color: var(--text-dim);
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
+        .track-list { flex-grow: 1; overflow-y: auto; }
+        .track-item { padding: 12px 24px; cursor: pointer; color: var(--text-dim); font-size: 13px; border-left: 2px solid transparent; transition: 0.2s; }
+        .track-item.active { color: var(--accent); background: rgba(255,255,255,0.1); border-left-color: var(--accent); }
 
-        .track-list {
+        /* VIEWPORT */
+        .viewport {
             flex-grow: 1;
-            overflow-y: auto;
-            padding-bottom: 20px;
+            display: flex;
+            flex-direction: column;
         }
 
-        .track-item {
-            padding: 12px 24px;
-            cursor: pointer;
-            color: var(--text-dim);
-            font-size: 13px;
-            transition: 0.2s ease;
+        /* 30% HEADER */
+        header {
+            height: var(--header-height);
+            background: linear-gradient(to bottom, #222, #121212);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid #282828;
+            box-sizing: border-box;
         }
 
-        .track-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
-
-        .track-item.active {
-            color: var(--accent);
-            background: rgba(255,255,255,0.1);
-        }
-
-        /* VIEWPORT & STATIONARY CARD */
-        .viewport-container {
+        /* 70% STAGE */
+        .stage {
             flex-grow: 1;
             position: relative;
-            background: radial-gradient(circle at top, #282828 0%, var(--player-bg) 100%);
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
         }
 
-        .static-page-card {
+        .static-card {
             position: absolute;
-            width: 80%;
-            max-width: 550px;
+            width: 60%;
+            max-width: 380px;
             aspect-ratio: 1 / 1.3;
             background: white;
             border-radius: 12px;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 50px 100px rgba(0,0,0,0.8);
+            box-shadow: 0 40px 80px rgba(0,0,0,0.6);
             z-index: 10;
             pointer-events: none;
         }
 
-        .page-number-display {
-            color: #121212;
-            font-size: 15rem;
-            font-weight: 900;
-        }
+        .page-num { color: #121212; font-size: 10rem; font-weight: 900; }
 
-        /* INVISIBLE SCROLL ENGINE */
         .scroll-engine {
             position: absolute;
             top: 0; left: 0;
@@ -113,7 +100,7 @@
 
         .ghost-page { height: 100%; width: 100%; scroll-snap-align: start; }
 
-        /* PLAYER BAR */
+        /* FOOTER PLAYER BAR */
         .player-bar {
             position: fixed; bottom: 0;
             width: 100%; height: var(--toolbar-height);
@@ -127,71 +114,13 @@
             z-index: 100;
         }
 
-        .info-panel { display: flex; align-items: center; gap: 15px; }
-
-        .art-box {
-            width: 60px; height: 60px;
-            background: #282828; color: var(--accent);
-            display: flex; justify-content: center; align-items: center;
-            border-radius: 4px; font-weight: 800; font-size: 22px;
-            border: 1px solid #333;
-        }
-
-        .playback-dashboard {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .nav-controls {
-            display: flex;
-            align-items: center;
-            gap: 32px;
-        }
-
-        .nav-btn {
-            background: none; border: none;
-            color: var(--text-dim); font-size: 24px;
-            cursor: pointer; transition: 0.2s;
-        }
-
-        .nav-btn:hover { color: white; transform: scale(1.1); }
-
-        .play-btn {
-            background: white; color: black;
-            width: 40px; height: 40px; border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 16px; border: none; cursor: pointer;
-        }
-
-        .progress-container {
-            width: 100%;
-            max-width: 500px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 11px;
-            color: var(--text-dim);
-        }
-
-        .progress-track {
-            flex-grow: 1; height: 4px;
-            background: #4f4f4f; border-radius: 2px;
-            cursor: pointer; position: relative;
-        }
-
-        .progress-fill {
-            height: 100%; background: var(--accent);
-            width: 0%; border-radius: 2px;
-        }
-
-        .jump-container { display: flex; justify-content: flex-end; }
-
-        input#jumpInput {
-            background: #282828; border: 1px solid #3e3e3e;
-            color: white; padding: 8px 16px; border-radius: 20px;
-            width: 60px; text-align: center; outline: none;
+        .progress-track { flex-grow: 1; height: 4px; background: #4f4f4f; border-radius: 2px; cursor: pointer; position: relative; }
+        .progress-fill { height: 100%; background: var(--accent); width: 0%; border-radius: 2px; }
+        input#jumpInput { background: #282828; border: 1px solid #3e3e3e; color: white; padding: 8px 15px; border-radius: 20px; width: 60px; text-align: center; outline: none; }
+        
+        #masterPlayBtn {
+            transition: all 0.2s ease;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -199,34 +128,43 @@
 
 <div class="wrapper">
     <aside class="sidebar">
-        <div class="sidebar-header">Collection</div>
+        <div style="padding: 24px; font-size: 11px; font-weight: bold; color: var(--text-dim); letter-spacing: 2px;">LIBRARY</div>
         <div class="track-list" id="trackList"></div>
     </aside>
 
-    <div class="viewport-container">
-        <div class="static-page-card">
-            <div class="page-number-display" id="mainDisplay">1</div>
+    <div class="viewport">
+        <header>
+            <audio id="audioPlayer" controls >
+                <source src="" type="audio/mpeg">
+            </audio>
+            
+           
+        </header>
+        
+        <div class="stage">
+            <div class="static-card">
+                <div class="page-num" id="mainDisplay">1</div>
+            </div>
+            <div class="scroll-engine" id="scrollEngine"></div>
         </div>
-        <div class="scroll-engine" id="scrollEngine"></div>
     </div>
 </div>
 
 <footer class="player-bar">
-    <div class="info-panel">
-        <div class="art-box" id="artDisplay">1</div>
-        <div>
-            <div style="font-size: 14px; font-weight: 600;">Current Track</div>
-            <div style="font-size: 12px; color: var(--text-dim);" id="statusLabel">Page 1 of 300</div>
-        </div>
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <div style="width: 50px; height: 50px; background: #282828; color: var(--accent); display: flex; justify-content: center; align-items: center; border-radius: 4px; font-weight: 800;" id="artDisplay">1</div>
+        <div style="font-size: 13px;">Symphony Sync</div>
     </div>
 
-    <div class="playback-dashboard">
-        <div class="nav-controls">
-            <button class="nav-btn" onclick="stepNav(-1)">⏮</button>
-            <button class="play-btn">▶</button>
-            <button class="nav-btn" onclick="stepNav(1)">⏭</button>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+        <div style="display: flex; gap: 30px; align-items: center;">
+            <button onclick="stepNav(-1)" style="background:none; border:none; color:white; cursor:pointer; font-size:22px;">⏮</button>
+            
+            <button id="masterPlayBtn" onclick="toggleAudio()" style="background:white; border:none; width:45px; height:45px; border-radius:50%; cursor:pointer; font-size:14px; color: black;">▶</button>
+            
+            <button onclick="stepNav(1)" style="background:none; border:none; color:white; cursor:pointer; font-size:22px;">⏭</button>
         </div>
-        <div class="progress-container">
+        <div style="width: 100%; max-width: 500px; display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--text-dim);">
             <span id="currentVal">1</span>
             <div class="progress-track" onclick="seek(event)">
                 <div class="progress-fill" id="progressBar"></div>
@@ -235,8 +173,8 @@
         </div>
     </div>
 
-    <div class="jump-container">
-        <input type="number" id="jumpInput" placeholder="Go" onchange="jumpTo(this.value)">
+    <div style="display: flex; justify-content: flex-end;">
+        <input type="number" id="jumpInput" placeholder="Jump" onchange="jumpTo(this.value)">
     </div>
 </footer>
 
@@ -245,17 +183,16 @@
     const scrollEngine = document.getElementById('scrollEngine');
     const trackList = document.getElementById('trackList');
     const mainDisplay = document.getElementById('mainDisplay');
+    const headerDisplay = document.getElementById('headerDisplay');
     const progressBar = document.getElementById('progressBar');
     const artDisplay = document.getElementById('artDisplay');
     const currentVal = document.getElementById('currentVal');
-    const statusLabel = document.getElementById('statusLabel');
+    const audio = document.getElementById('audioPlayer');
+    const playBtn = document.getElementById('masterPlayBtn');
 
-    // --- EVENT LISTENER (Logs only when scroll stops) ---
-    window.addEventListener('pageChange', (event) => {
-        console.log(`Final Selected Page: ${event.detail.page}`);
-    });
+    let globalSafeNum = 1;
 
-    // 1. Initialize
+    // 1. Setup
     for (let i = 1; i <= total; i++) {
         const item = document.createElement('div');
         item.className = 'track-item';
@@ -270,7 +207,15 @@
         scrollEngine.appendChild(ghost);
     }
 
-    // 2. Navigation
+    // 2. Updated Audio Control Logic
+    function toggleAudio() {
+            console.log(globalSafeNum);
+            generateAudio();
+            // Display current page number instead of pause icon
+        
+    }
+
+    // 3. Navigation
     function jumpTo(num) {
         num = Math.max(1, Math.min(total, num));
         const target = document.getElementById(`ghost-${num}`);
@@ -278,8 +223,7 @@
     }
 
     function stepNav(dir) {
-        const current = parseInt(currentVal.textContent);
-        jumpTo(current + dir);
+        jumpTo(parseInt(currentVal.textContent) + dir);
     }
 
     function seek(e) {
@@ -288,52 +232,57 @@
         jumpTo(Math.ceil(percent * total));
     }
 
-    // 3. UI Synchronization & Selection Logic
-    let lastLoggedPage = 1;
-    let debounceTimer;
-
-    function syncUI() {
+    // 4. State Sync
+    function sync() {
         const h = scrollEngine.clientHeight;
-        const y = scrollEngine.scrollTop;
-        const pageNum = Math.round(y / h) + 1;
-        const safeNum = Math.max(1, Math.min(total, pageNum));
+        const pageNum = Math.round(scrollEngine.scrollTop / h) + 1;
+        globalSafeNum = Math.max(1, Math.min(total, pageNum));
 
-        // VISUAL UPDATES (Instant)
-        mainDisplay.textContent = safeNum;
-        artDisplay.textContent = safeNum;
-        currentVal.textContent = safeNum;
-        statusLabel.textContent = `Page ${safeNum} of 300`;
-        progressBar.style.width = `${(safeNum / total) * 100}%`;
+        mainDisplay.textContent = globalSafeNum;
+        headerDisplay.textContent = `Now Playing: Page ${globalSafeNum}`;
+        artDisplay.textContent = globalSafeNum;
+        currentVal.textContent = globalSafeNum;
+        progressBar.style.width = `${(globalSafeNum / total) * 100}%`;
+
+        // Update the play button live if audio is playing
+        if (!audio.paused) {
+            playBtn.textContent = globalSafeNum;
+        }
 
         const active = trackList.querySelector('.active');
         if (active) active.classList.remove('active');
-        const nextActive = document.getElementById(`track-${safeNum}`);
+        const nextActive = document.getElementById(`track-${globalSafeNum}`);
         if (nextActive) {
             nextActive.classList.add('active');
             nextActive.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         }
-
-        // --- DEBOUNCED EVENT DISPATCH ---
-        // Clear the timer every time the user scrolls
-        clearTimeout(debounceTimer);
-
-        // Only fire the event if the scroll hasn't moved for 150ms
-        debounceTimer = setTimeout(() => {
-            if (safeNum !== lastLoggedPage) {
-                lastLoggedPage = safeNum;
-                window.dispatchEvent(new CustomEvent('pageChange', { 
-                    detail: { page: safeNum } 
-                }));
-            }
-        }, 150); 
     }
 
     scrollEngine.addEventListener('scroll', () => {
-        window.requestAnimationFrame(syncUI);
+        window.requestAnimationFrame(sync);
     }, { passive: true });
 
-    syncUI();
+    sync();
 </script>
+<script>
+        async function generateAudio() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            const response = await fetch('/api/generate-speech', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: "10" })
+            });
 
+            const data = await response.json();
+            
+            if (data.audioUrl) {
+                audioPlayer.src = data.audioUrl;
+                audioPlayer.style.display = 'block';
+                audioPlayer.play();
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error'));
+            }
+        }
+    </script>
 </body>
 </html>
