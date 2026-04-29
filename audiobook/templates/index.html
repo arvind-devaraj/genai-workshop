@@ -2,22 +2,46 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Text to Speech</title>
+    <title>Text to Speech with Plyr</title>
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <style>
+        body { font-family: sans-serif; padding: 40px; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; }
+        textarea { width: 100%; border-radius: 8px; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+        button { background: #00b3ff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        
+        /* Hide the player container initially */
+        #player-wrapper { margin-top: 30px; display: none; }
+        
+        /* Optional: Custom color */
+        :root { --plyr-color-main: #00b3ff; }
+    </style>
 </head>
 <body>
-    <h2>Text to Speech</h2>
-    <textarea id="textInput" rows="4" cols="50" placeholder="Enter text here..."></textarea><br>
-    <button onclick="generateAudio()">Generate Audio</button>
-    
-    <div id="result" style="margin-top: 20px;">
-        <audio id="audioPlayer" controls style="display:none;"></audio>
+
+    <div class="container">
+        <h2>Text to Speech</h2>
+        <textarea id="textInput" rows="4" placeholder="Enter text here..."></textarea><br>
+        <button onclick="generateAudio()">Generate Audio</button>
+        
+        <div id="player-wrapper">
+            <audio id="audioPlayer" controls></audio>
+        </div>
     </div>
 
+    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+
     <script>
+        // 4. Initialize Player once
+        const player = new Plyr('#audioPlayer', {
+            controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'settings'],
+            settings: ['speed']
+        });
+
         async function generateAudio() {
             const text = document.getElementById('textInput').value;
-            const audioPlayer = document.getElementById('audioPlayer');
-            console.log(text);
+            if (!text) return alert("Please enter some text");
+
             const response = await fetch('/api/generate-speech', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -27,9 +51,18 @@
             const data = await response.json();
             
             if (data.audioUrl) {
-                audioPlayer.src = data.audioUrl;
-                audioPlayer.style.display = 'block';
-                audioPlayer.play();
+                // 5. Programmatically set the source using Plyr API
+                player.source = {
+                    type: 'audio',
+                    sources: [{
+                        src: data.audioUrl,
+                        type: 'audio/mp3',
+                    }]
+                };
+
+                // Show the container and play
+                document.getElementById('player-wrapper').style.display = 'block';
+                player.play();
             } else {
                 alert('Error: ' + (data.error || 'Unknown error'));
             }
