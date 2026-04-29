@@ -270,7 +270,7 @@
             const response = await fetch('/api/generate-speech', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: "10" })
+                body: JSON.stringify({ pagenum: globalSafeNum })
             });
 
             const data = await response.json();
