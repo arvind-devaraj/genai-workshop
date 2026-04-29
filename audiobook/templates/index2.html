@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Text to Speech</title>
+</head>
+<body>
+    <h2>Text to Speech</h2>
+    <textarea id="textInput" rows="4" cols="50" placeholder="Enter text here..."></textarea><br>
+    <button onclick="generateAudio()">Generate Audio</button>
+    
+    <div id="result" style="margin-top: 20px;">
+        <audio id="audioPlayer" controls style="display:none;"></audio>
+    </div>
+
+    <script>
+        async function generateAudio() {
+            const text = document.getElementById('textInput').value;
+            const audioPlayer = document.getElementById('audioPlayer');
+            console.log(text);
+            const response = await fetch('/api/generate-speech', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            });
+
+            const data = await response.json();
+            
+            if (data.audioUrl) {
+                audioPlayer.src = data.audioUrl;
+                audioPlayer.style.display = 'block';
+                audioPlayer.play();
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error'));
+            }
+        }
+    </script>
+</body>
+</html>
