@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fixed PDF Navigator</title>
+    <style>
+        :root {
+            --toolbar-bg: #2d2e30;
+            --viewer-bg: #525659;
+            --page-bg: #ffffff;
+            --accent: #4788ff;
+            --text-light: #f1f1f1;
+            --toolbar-height: 56px;
+        }
+
+        /* Essential for fixed layout: disable scroll on body */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            font-family: 'Inter', -apple-system, sans-serif;
+            overflow: hidden; 
+            background-color: var(--viewer-bg);
+        }
+
+        /* FIXED TOOLBAR */
+        .toolbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--toolbar-height);
+            background-color: var(--toolbar-bg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            color: var(--text-light);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+
+        .controls-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Navigation Styling */
+        .page-nav-container {
+            background: #1a1b1c;
+            padding: 4px 12px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="number"] {
+            width: 45px;
+            background: transparent;
+            border: 1px solid #444;
+            color: white;
+            text-align: center;
+            padding: 4px;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+
+        button {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--accent);
+        }
+
+        button:disabled {
+            opacity: 0.2;
+            cursor: not-allowed;
+        }
+
+        /* The Grid Dropdown Menu */
+        .dropdown {
+            position: relative;
+        }
+
+        .grid-panel {
+            display: none;
+            position: absolute;
+            top: 48px;
+            left: 0;
+            width: 320px;
+            max-height: 70vh;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+            padding: 16px;
+            overflow-y: auto;
+            z-index: 2000;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+        }
+
+        .grid-panel.show { display: grid; }
+
+        .grid-btn {
+            background: #f1f5f9;
+            color: #334155;
+            padding: 10px 0;
+            text-align: center;
+            border-radius: 4px;
+            font-size: 12px;
+            text-decoration: none;
+            border: 1px solid #e2e8f0;
+        }
+
+        .grid-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* SCROLLABLE VIEWPORT */
+        .viewport {
+            margin-top: var(--toolbar-height); /* Push down so content isn't hidden by nav */
+            height: calc(100vh - var(--toolbar-height));
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            scroll-behavior: smooth; /* Smooth jump when using "Go to" */
+        }
+
+        .page {
+            background: var(--page-bg);
+            width: 90%;
+            max-width: 850px;
+            min-height: 1100px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 4px;
+        }
+
+        .page-label {
+            font-size: 4rem;
+            color: #e2e8f0;
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="toolbar">
+    <div class="controls-group">
+        <div class="dropdown">
+            <button onclick="toggleGrid()">Browse 300 Pages ☰</button>
+            <div class="grid-panel" id="pageGrid"></div>
+        </div>
+    </div>
+
+    <div class="page-nav-container">
+        <button id="prevBtn" onclick="stepPage(-1)">◀ Prev</button>
+        <input type="number" id="pageInput" value="1" min="1" max="300" onchange="jumpTo(this.value)">
+        <span style="color: #888">of 300</span>
+        <button id="nextBtn" onclick="stepPage(1)">Next ▶</button>
+    </div>
+
+    <div class="controls-group">
+        <button onclick="window.scrollTo({top: 0})">Top ↑</button>
+    </div>
+</nav>
+
+<main class="viewport" id="viewport">
+    </main>
+
+<script>
+    const total = 300;
+    const viewport = document.getElementById('viewport');
+    const grid = document.getElementById('pageGrid');
+    const input = document.getElementById('pageInput');
+
+    // Init: Build UI
+    for (let i = 1; i <= total; i++) {
+        // Build the physical pages
+        const pageDiv = document.createElement('section');
+        pageDiv.className = 'page';
+        pageDiv.id = `pg-${i}`;
+        pageDiv.innerHTML = `<span class="page-label">PAGE ${i}</span>`;
+        viewport.appendChild(pageDiv);
+
+        // Build the grid menu items
+        const gridBtn = document.createElement('a');
+        gridBtn.className = 'grid-btn';
+        gridBtn.href = `#pg-${i}`;
+        gridBtn.textContent = i;
+        gridBtn.onclick = (e) => {
+            e.preventDefault();
+            jumpTo(i);
+            toggleGrid();
+        };
+        grid.appendChild(gridBtn);
+    }
+
+    // Logic: Scroll to specific page
+    function jumpTo(num) {
+        num = Math.max(1, Math.min(total, num));
+        input.value = num;
+        const target = document.getElementById(`pg-${num}`);
+        if (target) {
+            // Adjust for fixed header height
+            const offset = 56; 
+            const bodyRect = viewport.getBoundingClientRect().top;
+            const elementRect = target.getBoundingClientRect().top;
+            const elementPosition = elementRect - bodyRect;
+            
+            viewport.scrollTo({
+                top: viewport.scrollTop + elementPosition,
+                behavior: 'smooth'
+            });
+        }
+    }
+
+    function stepPage(dir) {
+        jumpTo(parseInt(input.value) + dir);
+    }
+
+    function toggleGrid() {
+        grid.classList.toggle('show');
+    }
+
+    // Logic: Update input as user scrolls
+    viewport.addEventListener('scroll', () => {
+        const pages = document.querySelectorAll('.page');
+        let current = 1;
+        
+        pages.forEach((page, index) => {
+            const rect = page.getBoundingClientRect();
+            // If page top is roughly in the top half of the viewport
+            if (rect.top < window.innerHeight / 2) {
+                current = index + 1;
+            }
+        });
+        
+        if (document.activeElement !== input) {
+            input.value = current;
+        }
+    });
+
+    // Close grid if clicking outside
+    window.onclick = function(event) {
+        if (!event.target.matches('button')) {
+            if (grid.classList.contains('show')) grid.classList.remove('show');
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Symphony - Static View</title>
+    <style>
+        :root {
+            --player-bg: #121212;
+            --sidebar-bg: #000000;
+            --accent: #1DB954;
+            --text-main: #ffffff;
+            --text-dim: #b3b3b3;
+            --toolbar-height: 90px;
+            --sidebar-width: 260px;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            height: 100%; width: 100%;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--player-bg);
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        .wrapper {
+            display: flex;
+            height: calc(100vh - var(--toolbar-height));
+            width: 100%;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #282828;
+            z-index: 20;
+        }
+
+        .track-list {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .track-item {
+            padding: 12px 24px;
+            cursor: pointer;
+            color: var(--text-dim);
+            font-size: 13px;
+        }
+
+        .track-item.active {
+            color: var(--accent);
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* THE VIEWPORT SYSTEM */
+        .viewport-container {
+            flex-grow: 1;
+            position: relative;
+            background: linear-gradient(to bottom, #1e1e1e, var(--player-bg));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* STATIC PAGE: This does not move */
+        .static-page-card {
+            position: absolute;
+            width: 85%;
+            max-width: 800px;
+            height: 90%;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+            z-index: 10;
+            pointer-events: none; /* Let clicks pass through to the scroll layer */
+        }
+
+        .page-number-display {
+            color: #121212;
+            font-size: 12rem;
+            font-weight: 900;
+        }
+
+        /* SCROLL LAYER: The "Invisible" engine */
+        .scroll-engine {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+            z-index: 5;
+        }
+
+        .ghost-page {
+            height: 100%;
+            width: 100%;
+            scroll-snap-align: start;
+        }
+
+        /* PLAYER BAR */
+        .player-bar {
+            position: fixed; bottom: 0;
+            width: 100%; height: var(--toolbar-height);
+            background-color: #181818;
+            border-top: 1px solid #282828;
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            align-items: center;
+            padding: 0 25px;
+            box-sizing: border-box;
+            z-index: 100;
+        }
+
+        .progress-track {
+            flex-grow: 1; height: 4px;
+            background: #4f4f4f; border-radius: 2px;
+            cursor: pointer; position: relative;
+        }
+
+        .progress-fill {
+            height: 100%; background: var(--accent);
+            width: 0%; border-radius: 2px;
+        }
+
+        #jumpInput {
+            background: #282828; border: 1px solid #3e3e3e;
+            color: white; padding: 8px 15px; border-radius: 20px;
+            width: 60px; text-align: center; outline: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <aside class="sidebar">
+        <div style="padding: 24px; font-size: 11px; font-weight: bold; color: var(--text-dim);">COLLECTION</div>
+        <div class="track-list" id="trackList"></div>
+    </aside>
+
+    <div class="viewport-container">
+        <div class="static-page-card">
+            <div class="page-number-display" id="mainDisplay">1</div>
+        </div>
+
+        <div class="scroll-engine" id="scrollEngine">
+            </div>
+    </div>
+</div>
+
+<footer class="player-bar">
+    <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="width: 56px; height: 56px; background: #282828; color: var(--accent); display: flex; justify-content: center; align-items: center; border-radius: 4px; font-weight: 800;" id="artDisplay">1</div>
+        <div>
+            <div style="font-size: 14px; font-weight: 500;">Static View Mode</div>
+            <div style="font-size: 11px; color: var(--text-dim);" id="statusLabel">Page 1</div>
+        </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+        <div style="width: 100%; max-width: 500px; display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--text-dim);">
+            <span id="currentVal">1</span>
+            <div class="progress-track" onclick="seekTo(event)">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+            <span>300</span>
+        </div>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end;">
+        <input type="number" id="jumpInput" placeholder="Go" onchange="jumpTo(this.value)">
+    </div>
+</footer>
+
+<script>
+    const total = 300;
+    const scrollEngine = document.getElementById('scrollEngine');
+    const trackList = document.getElementById('trackList');
+    const mainDisplay = document.getElementById('mainDisplay');
+    const progressBar = document.getElementById('progressBar');
+    const artDisplay = document.getElementById('artDisplay');
+    const currentVal = document.getElementById('currentVal');
+
+    // 1. Initialize
+    for (let i = 1; i <= total; i++) {
+        // Sidebar
+        const item = document.createElement('div');
+        item.className = 'track-item';
+        item.id = `track-${i}`;
+        item.innerHTML = `Page ${i}`;
+        item.onclick = () => jumpTo(i);
+        trackList.appendChild(item);
+
+        // Ghost Page (Invisible trigger)
+        const ghost = document.createElement('div');
+        ghost.className = 'ghost-page';
+        ghost.id = `ghost-${i}`;
+        scrollEngine.appendChild(ghost);
+    }
+
+    // 2. Navigation
+    function jumpTo(num) {
+        num = Math.max(1, Math.min(total, num));
+        const target = document.getElementById(`ghost-${num}`);
+        scrollEngine.scrollTo({ top: target.offsetTop, behavior: 'smooth' });
+    }
+
+    function seekTo(e) {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const percent = (e.clientX - rect.left) / rect.width;
+        jumpTo(Math.ceil(percent * total));
+    }
+
+    // 3. The Logic: Update the static content based on scroll position
+    function updateContent() {
+        const h = scrollEngine.clientHeight;
+        const y = scrollEngine.scrollTop;
+        const pageNum = Math.round(y / h) + 1;
+        const safeNum = Math.max(1, Math.min(total, pageNum));
+
+        // Update central display
+        mainDisplay.textContent = safeNum;
+        
+        // Update Player Bar
+        artDisplay.textContent = safeNum;
+        currentVal.textContent = safeNum;
+        document.getElementById('statusLabel').textContent = `Page ${safeNum}`;
+        progressBar.style.width = `${(safeNum / total) * 100}%`;
+
+        // Update Sidebar
+        const active = trackList.querySelector('.active');
+        if (active) active.classList.remove('active');
+        const nextActive = document.getElementById(`track-${safeNum}`);
+        if (nextActive) {
+            nextActive.classList.add('active');
+            nextActive.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+        }
+    }
+
+    scrollEngine.addEventListener('scroll', () => {
+        window.requestAnimationFrame(updateContent);
+    }, { passive: true });
+
+    updateContent();
+</script>
+
+</body>
+</html>
