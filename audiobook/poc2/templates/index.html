@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; background: #f5f5f5; }
+        h1 { max-width: 600px; text-align: center; margin-bottom: 30px; font-size: 1.4rem; color: #333; }
+        .text-card {
+            padding: 25px 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            cursor: pointer;
+            max-width: 600px;
+            width: 100%;
+            margin-bottom: 16px;
+            border: 2px solid transparent;
+            transition: 0.2s;
+        }
+        .text-card:hover { border-color: #007bff; transform: scale(1.01); }
+        .text-card.loading { opacity: 0.5; cursor: wait; }
+        .text-card.playing { border-color: #28a745; background: #f0fff4; }
+        .instruction { font-size: 0.75rem; color: #007bff; font-weight: bold; margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <h1>{{ title }}</h1>
+
+    {% for segment in segments %}
+    <div class="text-card" data-id="{{ segment.id }}">
+        <div class="instruction">CLICK TO PLAY</div>
+        <p>{{ segment.text }}</p>
+    </div>
+    {% endfor %}
+
+    <audio id="player"></audio>
+
+    <script>
+        const player = document.getElementById('player');
+        let activeCard = null;
+
+        player.addEventListener('ended', () => {
+            if (activeCard) {
+                activeCard.classList.remove('playing');
+                activeCard = null;
+            }
+        });
+
+        document.querySelectorAll('.text-card').forEach(card => {
+            card.addEventListener('click', async function () {
+                const text = this.querySelector('p').innerText;
+
+                if (activeCard) activeCard.classList.remove('playing');
+                activeCard = this;
+                this.classList.add('loading');
+
+                try {
+                    const response = await fetch('/generate-audio', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text })
+                    });
+
+                    if (!response.ok) throw new Error('Server error');
+
+                    const blob = await response.blob();
+                    player.src = URL.createObjectURL(blob);
+                    player.play();
+                    this.classList.add('playing');
+                } catch (err) {
+                    console.error("Error:", err);
+                    alert("Playback failed. Check if UNREAL_TOKEN is set and Flask is running.");
+                    activeCard = null;
+                } finally {
+                    this.classList.remove('loading');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -32,7 +32,7 @@ def generate_audio():
         'Text': data['text'],
         'VoiceId': 'Amy',
         'Bitrate': '192k',
-        'Speed': '0.1',
+        'Speed': '0',
         'Pitch': '1'
     }
 

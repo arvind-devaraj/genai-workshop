@@ -2,20 +2,16 @@ from flask import Flask, render_template, request, send_file, jsonify
 import requests
 import os
 import io
-import json
 
 app = Flask(__name__)
 
 API_URL = "https://api.v7.unrealspeech.com/stream"
 API_TOKEN = os.environ.get('UNREAL_TOKEN')
 
-PARAGRAPHS_FILE = os.path.join(os.path.dirname(__file__), 'paragraphs.json')
-
 @app.route('/')
 def index():
-    with open(PARAGRAPHS_FILE) as f:
-        data = json.load(f)
-    return render_template('index.html', title=data['title'], segments=data['segments'])
+    # This renders the initial page
+    return render_template('index.html')
 
 @app.route('/generate-audio', methods=['POST'])
 def generate_audio():
@@ -32,7 +28,7 @@ def generate_audio():
         'Text': data['text'],
         'VoiceId': 'Amy',
         'Bitrate': '192k',
-        'Speed': '0.1',
+        'Speed': '0',
         'Pitch': '1'
     }
 

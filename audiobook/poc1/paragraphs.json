@@ -3,31 +3,26 @@
   "segments": [
     {
       "id": 1,
-      "title": "The Constant Goal of Improvement",
       "character_count": 313,
       "text": "New models come and go, but one thing remains constant: continually improving them to be better, cheaper, and faster. Until now, the book has explored various methods for enhancing model performance. This chapter shifts focus towards optimizing these models for speed and cost efficiency."
     },
     {
       "id": 2,
-      "title": "The Business Impact of Latency",
       "character_count": 314,
       "text": "Regardless of how highly effective your model is, if it takes too long to compute or costs an excessive amount of resources, users might lose patience or even find its predictions unreliable—consider a next-day stock price prediction model that requires two days to generate results."
     },
     {
       "id": 3,
-      "title": "Architectural and Hardware Optimization",
       "character_count": 418,
       "text": "If the model is resource-intensive, you may not see a good return on investment. Inference optimization can be implemented across multiple levels: at the model level where you reduce model size and develop more efficient architectures, such as those without bottleneck issues in attention mechanisms often used in transformer models; or at the hardware level by designing more powerful systems."
     },
     {
       "id": 4,
-      "title": "The Role of Inference Services",
       "character_count": 329,
       "text": "The inference service runs the model on specific hardware to meet user demands efficiently. It employs optimization techniques tailored for particular hardware configurations, takes into account usage patterns to optimize resource allocation, and considers efficiency in terms of reducing latency and cost."
     },
     {
       "id": 5,
-      "title": "Collaborative Strategies and Bottlenecks",
       "character_count": 472,
       "text": "This field of inference optimization is a collaborative effort involving researchers specializing in models, developers working with applications, engineers focusing on systems design, compiler designers creating optimized code, architects shaping hardware specifications, and operators managing data centers. This chapter delves into identifying performance bottlenecks in AI inference and introduces strategies to overcome them, emphasizing optimization at the model and service levels."
     }
