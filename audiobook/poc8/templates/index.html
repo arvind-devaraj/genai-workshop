@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audiobook</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; background: #f5f5f5; }
+        h1 { max-width: 640px; text-align: center; margin-bottom: 30px; font-size: 1.4rem; color: #333; }
+        .card {
+            padding: 30px 36px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            max-width: 640px;
+            width: 100%;
+        }
+        .paragraph-title {
+            font-size: 0.7rem;
+            font-weight: bold;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #007bff;
+            margin-top: 28px;
+            margin-bottom: 6px;
+        }
+        .paragraph-title:first-child { margin-top: 0; }
+        .paragraph {
+            margin: 0 0 4px 0;
+            line-height: 1.7;
+            color: #444;
+            padding: 6px 8px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .paragraph.playing { background: #f0fff4; color: #1a6b34; }
+        button {
+            margin-bottom: 24px;
+            padding: 12px 28px;
+            font-size: 1rem;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #aaa; cursor: wait; }
+    </style>
+</head>
+<body>
+    <button id="play-btn">Listen</button>
+    <div class="card">
+        {% for segment in segments %}
+        <div class="paragraph-title">{{ segment.title }}</div>
+        <p class="paragraph">{{ segment.text }}</p>
+        {% endfor %}
+    </div>
+
+    <audio id="player"></audio>
+
+    <script>
+        const player = document.getElementById('player');
+        const btn = document.getElementById('play-btn');
+        const paragraphEls = document.querySelectorAll('.paragraph');
+        const texts = {{ segments | map(attribute='text') | list | tojson }};
+
+        const fetchPromises = new Array(texts.length).fill(null);
+        let started = false;
+
+        function fetchAudio(index) {
+            if (fetchPromises[index]) return fetchPromises[index];
+            fetchPromises[index] = fetch('/generate-audio', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: texts[index] })
+            }).then(r => {
+                if (!r.ok) throw new Error('Server error');
+                return r.blob();
+            }).then(blob => URL.createObjectURL(blob));
+            return fetchPromises[index];
+        }
+
+        async function playFrom(index) {
+            if (index >= texts.length) {
+                started = false;
+                btn.disabled = false;
+                btn.textContent = 'Listen';
+                paragraphEls.forEach(el => el.classList.remove('playing'));
+                return;
+            }
+
+            if (index + 1 < texts.length) fetchAudio(index + 1);
+
+            const url = await fetchAudio(index);
+
+            if (index > 0) paragraphEls[index - 1].classList.remove('playing');
+            paragraphEls[index].classList.add('playing');
+
+            player.src = url;
+            player.play();
+            btn.textContent = 'Pause';
+            player.onended = () => playFrom(index + 1);
+        }
+
+        btn.addEventListener('click', async function () {
+            if (started) {
+                if (player.paused) {
+                    player.play();
+                    btn.textContent = 'Pause';
+                } else {
+                    player.pause();
+                    btn.textContent = 'Resume';
+                }
+                return;
+            }
+
+            started = true;
+            fetchPromises.fill(null);
+            paragraphEls.forEach(el => el.classList.remove('playing'));
+            btn.disabled = true;
+            btn.textContent = 'Loading...';
+
+            try {
+                await fetchAudio(0);
+                btn.disabled = false;
+                playFrom(0);
+            } catch (err) {
+                console.error("Error:", err);
+                alert("Playback failed. Check if UNREAL_TOKEN is set and Flask is running.");
+                started = false;
+                btn.disabled = false;
+                btn.textContent = 'Listen';
+            }
+        });
+    </script>
+</body>
+</html>

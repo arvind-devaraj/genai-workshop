@@ -12,34 +12,13 @@ API_TOKEN = os.environ.get('UNREAL_TOKEN')
 
 PARAGRAPHS_FILE = os.path.join(os.path.dirname(__file__), 'paragraphs.json')
 CACHE_DIR = os.path.join(os.path.dirname(__file__), 'cache')
-DATA_META_DIR = os.path.join(os.path.dirname(__file__), 'data-meta')
 os.makedirs(CACHE_DIR, exist_ok=True)
-
-def get_available_pages():
-    if not os.path.exists(DATA_META_DIR):
-        return []
-    pages = []
-    for f in os.listdir(DATA_META_DIR):
-        if f.startswith('page') and f.endswith('.txt'):
-            num = f[4:-4]
-            if num.isdigit():
-                pages.append(int(num))
-    return sorted(pages)
 
 @app.route('/')
 def index():
     with open(PARAGRAPHS_FILE) as f:
         data = json.load(f)
-    return render_template('index.html', segments=data, pages=get_available_pages())
-
-@app.route('/page/<page_num>')
-def get_page(page_num):
-    file_path = os.path.join(DATA_META_DIR, f'page{page_num}.txt')
-    if not os.path.exists(file_path):
-        return jsonify({"error": f"Page {page_num} not found"}), 404
-    with open(file_path) as f:
-        data = json.load(f)
-    return jsonify(data)
+    return render_template('index.html', segments=data)
 
 @app.route('/generate-audio', methods=['POST'])
 def generate_audio():

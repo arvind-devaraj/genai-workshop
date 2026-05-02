@@ -15,22 +15,11 @@ CACHE_DIR = os.path.join(os.path.dirname(__file__), 'cache')
 DATA_META_DIR = os.path.join(os.path.dirname(__file__), 'data-meta')
 os.makedirs(CACHE_DIR, exist_ok=True)
 
-def get_available_pages():
-    if not os.path.exists(DATA_META_DIR):
-        return []
-    pages = []
-    for f in os.listdir(DATA_META_DIR):
-        if f.startswith('page') and f.endswith('.txt'):
-            num = f[4:-4]
-            if num.isdigit():
-                pages.append(int(num))
-    return sorted(pages)
-
 @app.route('/')
 def index():
     with open(PARAGRAPHS_FILE) as f:
         data = json.load(f)
-    return render_template('index.html', segments=data, pages=get_available_pages())
+    return render_template('index.html', segments=data)
 
 @app.route('/page/<page_num>')
 def get_page(page_num):

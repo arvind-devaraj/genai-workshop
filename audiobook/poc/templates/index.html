@@ -3,68 +3,248 @@
 <head>
     <title>Audiobook</title>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; background: #f5f5f5; }
-        h1 { max-width: 640px; text-align: center; margin-bottom: 30px; font-size: 1.4rem; color: #333; }
-        .card {
-            padding: 30px 36px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            max-width: 640px;
-            width: 100%;
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #404040;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        .paragraph-title {
-            font-size: 0.7rem;
-            font-weight: bold;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: #007bff;
-            margin-top: 28px;
-            margin-bottom: 6px;
+
+        /* ── Toolbar ── */
+        .toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #2c2c2c;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            height: 52px;
+            gap: 16px;
         }
-        .paragraph-title:first-child { margin-top: 0; }
-        .paragraph {
-            margin: 0 0 4px 0;
-            line-height: 1.7;
-            color: #444;
-            padding: 6px 8px;
+
+        .toolbar-title {
+            color: #ccc;
+            font-size: 0.85rem;
+            font-weight: 500;
+            white-space: nowrap;
+            letter-spacing: 0.03em;
+        }
+
+        .toolbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toolbar select {
+            background: #3a3a3a;
+            color: #eee;
+            border: 1px solid #555;
             border-radius: 6px;
-            transition: background 0.2s;
+            padding: 5px 10px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            outline: none;
+            max-width: 160px;
         }
-        .paragraph.playing { background: #f0fff4; color: #1a6b34; }
-        button {
-            margin-bottom: 24px;
-            padding: 12px 28px;
+        .toolbar select:hover { border-color: #888; }
+
+        .toolbar input[type=number] {
+            background: #3a3a3a;
+            color: #eee;
+            border: 1px solid #555;
+            border-radius: 6px;
+            padding: 5px 8px;
+            font-size: 0.85rem;
+            width: 64px;
+            text-align: center;
+            outline: none;
+        }
+        .toolbar input[type=number]:focus { border-color: #888; }
+        .toolbar input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
+
+        .nav-btn {
+            background: #3a3a3a;
+            color: #ddd;
+            border: 1px solid #555;
+            border-radius: 6px;
+            width: 32px;
+            height: 32px;
             font-size: 1rem;
-            background: #007bff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+            padding: 0;
+        }
+        .nav-btn:hover:not(:disabled) { background: #555; color: #fff; }
+        .nav-btn:disabled { opacity: 0.35; cursor: default; }
+
+        .divider {
+            width: 1px;
+            height: 24px;
+            background: #555;
+            margin: 0 4px;
+        }
+
+        .play-btn {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: #1a73e8;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
+            padding: 7px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
             cursor: pointer;
+            transition: background 0.15s;
+            white-space: nowrap;
         }
-        button:hover { background: #0056b3; }
-        button:disabled { background: #aaa; cursor: wait; }
+        .play-btn:hover:not(:disabled) { background: #1557b0; }
+        .play-btn:disabled { background: #555; cursor: wait; color: #aaa; }
+        .play-btn.paused { background: #e8a000; }
+        .play-btn.paused:hover { background: #c68a00; }
+
+        /* ── Content ── */
+        .content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            padding: 36px 20px 60px;
+        }
+
+        .card {
+            background: white;
+            width: 100%;
+            max-width: 680px;
+            min-height: 400px;
+            border-radius: 4px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+            padding: 48px 56px;
+        }
+
+        .paragraph-title {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #1a73e8;
+            margin-top: 32px;
+            margin-bottom: 8px;
+        }
+        .paragraph-title:first-child { margin-top: 0; }
+
+        .paragraph {
+            font-size: 0.975rem;
+            line-height: 1.75;
+            color: #333;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .paragraph:hover { background: #f0f4ff; }
+        .paragraph.playing {
+            background: #e8f5e9;
+            color: #1b5e20;
+            border-left: 3px solid #34a853;
+            padding-left: 7px;
+        }
     </style>
 </head>
 <body>
-    <button id="play-btn">Listen</button>
-    <div class="card">
-        {% for segment in segments %}
-        <div class="paragraph-title">{{ segment.title }}</div>
-        <p class="paragraph">{{ segment.text }}</p>
-        {% endfor %}
+
+    <div class="toolbar">
+        <span class="toolbar-title">&#128366; Audiobook</span>
+
+        <div class="toolbar-nav">
+            <select id="page-select">
+                <option value="">— Page —</option>
+                {% for page in pages %}
+                <option value="{{ page }}">Page {{ page }}</option>
+                {% endfor %}
+            </select>
+
+            <div class="divider"></div>
+
+            <button class="nav-btn" id="prev-btn" title="Previous page" disabled>&#8249;</button>
+            <input type="number" id="page-input" placeholder="—" min="1" title="Enter page number and press Enter">
+            <button class="nav-btn" id="next-btn" title="Next page" disabled>&#8250;</button>
+        </div>
+
+        <button class="play-btn" id="play-btn">&#9654; Listen</button>
+    </div>
+
+    <div class="content">
+        <div class="card" id="card"></div>
     </div>
 
     <audio id="player"></audio>
 
     <script>
-        const player = document.getElementById('player');
-        const btn = document.getElementById('play-btn');
-        const paragraphEls = document.querySelectorAll('.paragraph');
-        const texts = {{ segments | map(attribute='text') | list | tojson }};
+        const player     = document.getElementById('player');
+        const btn        = document.getElementById('play-btn');
+        const prevBtn    = document.getElementById('prev-btn');
+        const nextBtn    = document.getElementById('next-btn');
+        const pageInput  = document.getElementById('page-input');
+        const pageSelect = document.getElementById('page-select');
+        const card       = document.getElementById('card');
 
-        const fetchPromises = new Array(texts.length).fill(null);
-        let started = false;
+        let texts        = [];
+        let paragraphEls = [];
+        let fetchPromises = [];
+        let started      = false;
+        let currentPage  = null;
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function setPlayBtn(state) {
+            btn.className = 'play-btn';
+            if (state === 'listen')       { btn.innerHTML = '&#9654; Listen';  btn.disabled = false; }
+            else if (state === 'loading') { btn.innerHTML = '&#8987; Loading'; btn.disabled = true; }
+            else if (state === 'pause')   { btn.innerHTML = '&#9646;&#9646; Pause'; btn.disabled = false; }
+            else if (state === 'resume')  { btn.innerHTML = '&#9654; Resume'; btn.className = 'play-btn paused'; btn.disabled = false; }
+        }
+
+        function loadSegments(segments) {
+            player.pause();
+            player.src = '';
+            player.onended = null;
+            started = false;
+            fetchPromises = new Array(segments.length).fill(null);
+
+            card.innerHTML = segments.map(s =>
+                `<div class="paragraph-title">${escapeHtml(s.title)}</div>` +
+                `<p class="paragraph">${escapeHtml(s.text)}</p>`
+            ).join('');
+
+            texts = segments.map(s => s.text);
+            paragraphEls = Array.from(card.querySelectorAll('.paragraph'));
+
+            paragraphEls.forEach((el, i) => {
+                el.addEventListener('click', () => {
+                    player.pause();
+                    player.onended = null;
+                    paragraphEls.forEach(e => e.classList.remove('playing'));
+                    started = true;
+                    fetchPromises = new Array(texts.length).fill(null);
+                    playFrom(i);
+                });
+            });
+
+            setPlayBtn('listen');
+        }
 
         function fetchAudio(index) {
             if (fetchPromises[index]) return fetchPromises[index];
@@ -82,8 +262,7 @@
         async function playFrom(index) {
             if (index >= texts.length) {
                 started = false;
-                btn.disabled = false;
-                btn.textContent = 'Listen';
+                setPlayBtn('listen');
                 paragraphEls.forEach(el => el.classList.remove('playing'));
                 return;
             }
@@ -94,10 +273,11 @@
 
             if (index > 0) paragraphEls[index - 1].classList.remove('playing');
             paragraphEls[index].classList.add('playing');
+            paragraphEls[index].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
             player.src = url;
             player.play();
-            btn.textContent = 'Pause';
+            setPlayBtn('pause');
             player.onended = () => playFrom(index + 1);
         }
 
@@ -105,10 +285,10 @@
             if (started) {
                 if (player.paused) {
                     player.play();
-                    btn.textContent = 'Pause';
+                    setPlayBtn('pause');
                 } else {
                     player.pause();
-                    btn.textContent = 'Resume';
+                    setPlayBtn('resume');
                 }
                 return;
             }
@@ -116,21 +296,52 @@
             started = true;
             fetchPromises.fill(null);
             paragraphEls.forEach(el => el.classList.remove('playing'));
-            btn.disabled = true;
-            btn.textContent = 'Loading...';
+            setPlayBtn('loading');
 
             try {
                 await fetchAudio(0);
-                btn.disabled = false;
                 playFrom(0);
             } catch (err) {
                 console.error("Error:", err);
                 alert("Playback failed. Check if UNREAL_TOKEN is set and Flask is running.");
                 started = false;
-                btn.disabled = false;
-                btn.textContent = 'Listen';
+                setPlayBtn('listen');
             }
         });
+
+        async function loadPage(pageNum) {
+            prevBtn.disabled = true;
+            nextBtn.disabled = true;
+
+            try {
+                const response = await fetch(`/page/${pageNum}`);
+                if (!response.ok) throw new Error(`Page ${pageNum} not found`);
+                const segments = await response.json();
+                loadSegments(segments);
+                currentPage = parseInt(pageNum);
+                pageInput.value = currentPage;
+                pageSelect.value = currentPage;
+            } catch (err) {
+                console.error("Error:", err);
+                alert(`Could not load page ${pageNum}.`);
+            } finally {
+                prevBtn.disabled = currentPage <= 1;
+                nextBtn.disabled = false;
+            }
+        }
+
+        pageInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && pageInput.value.trim()) loadPage(pageInput.value.trim());
+        });
+
+        prevBtn.addEventListener('click', () => { if (currentPage > 1) loadPage(currentPage - 1); });
+        nextBtn.addEventListener('click', () => { if (currentPage !== null) loadPage(currentPage + 1); });
+
+        pageSelect.addEventListener('change', function () {
+            if (this.value) loadPage(this.value);
+        });
+
+        loadSegments({{ segments | tojson }});
     </script>
 </body>
 </html>

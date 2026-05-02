@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audiobook</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; background: #f5f5f5; }
+        .card {
+            padding: 30px 36px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            max-width: 640px;
+            width: 100%;
+        }
+        .paragraph-title {
+            font-size: 0.7rem;
+            font-weight: bold;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #007bff;
+            margin-top: 28px;
+            margin-bottom: 6px;
+        }
+        .paragraph-title:first-child { margin-top: 0; }
+        .paragraph {
+            margin: 0 0 4px 0;
+            line-height: 1.7;
+            color: #444;
+            padding: 6px 8px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .paragraph.playing { background: #f0fff4; color: #1a6b34; }
+        .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; }
+        .controls input {
+            padding: 10px 14px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            width: 140px;
+        }
+        button {
+            padding: 10px 24px;
+            font-size: 1rem;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #aaa; cursor: wait; }
+        #play-btn { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <input type="number" id="page-input" placeholder="Page number" min="1">
+        <button id="load-btn">Load Page</button>
+    </div>
+
+    <button id="play-btn">Listen</button>
+    <div class="card" id="card"></div>
+
+    <audio id="player"></audio>
+
+    <script>
+        const player = document.getElementById('player');
+        const btn = document.getElementById('play-btn');
+        const loadBtn = document.getElementById('load-btn');
+        const card = document.getElementById('card');
+
+        let texts = [];
+        let paragraphEls = [];
+        let fetchPromises = [];
+        let started = false;
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function loadSegments(segments) {
+            player.pause();
+            player.src = '';
+            player.onended = null;
+            started = false;
+            fetchPromises = new Array(segments.length).fill(null);
+
+            card.innerHTML = segments.map(s =>
+                `<div class="paragraph-title">${escapeHtml(s.title)}</div>` +
+                `<p class="paragraph">${escapeHtml(s.text)}</p>`
+            ).join('');
+
+            texts = segments.map(s => s.text);
+            paragraphEls = Array.from(card.querySelectorAll('.paragraph'));
+
+            btn.disabled = false;
+            btn.textContent = 'Listen';
+        }
+
+        function fetchAudio(index) {
+            if (fetchPromises[index]) return fetchPromises[index];
+            fetchPromises[index] = fetch('/generate-audio', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: texts[index] })
+            }).then(r => {
+                if (!r.ok) throw new Error('Server error');
+                return r.blob();
+            }).then(blob => URL.createObjectURL(blob));
+            return fetchPromises[index];
+        }
+
+        async function playFrom(index) {
+            if (index >= texts.length) {
+                started = false;
+                btn.disabled = false;
+                btn.textContent = 'Listen';
+                paragraphEls.forEach(el => el.classList.remove('playing'));
+                return;
+            }
+
+            if (index + 1 < texts.length) fetchAudio(index + 1);
+
+            const url = await fetchAudio(index);
+
+            if (index > 0) paragraphEls[index - 1].classList.remove('playing');
+            paragraphEls[index].classList.add('playing');
+
+            player.src = url;
+            player.play();
+            btn.textContent = 'Pause';
+            player.onended = () => playFrom(index + 1);
+        }
+
+        btn.addEventListener('click', async function () {
+            if (started) {
+                if (player.paused) {
+                    player.play();
+                    btn.textContent = 'Pause';
+                } else {
+                    player.pause();
+                    btn.textContent = 'Resume';
+                }
+                return;
+            }
+
+            started = true;
+            fetchPromises.fill(null);
+            paragraphEls.forEach(el => el.classList.remove('playing'));
+            btn.disabled = true;
+            btn.textContent = 'Loading...';
+
+            try {
+                await fetchAudio(0);
+                btn.disabled = false;
+                playFrom(0);
+            } catch (err) {
+                console.error("Error:", err);
+                alert("Playback failed. Check if UNREAL_TOKEN is set and Flask is running.");
+                started = false;
+                btn.disabled = false;
+                btn.textContent = 'Listen';
+            }
+        });
+
+        loadBtn.addEventListener('click', async function () {
+            const pageNum = document.getElementById('page-input').value.trim();
+            if (!pageNum) return;
+
+            loadBtn.disabled = true;
+            loadBtn.textContent = 'Loading...';
+
+            try {
+                const response = await fetch(`/page/${pageNum}`);
+                if (!response.ok) throw new Error(`Page ${pageNum} not found`);
+                const segments = await response.json();
+                loadSegments(segments);
+            } catch (err) {
+                console.error("Error:", err);
+                alert(`Could not load page ${pageNum}.`);
+            } finally {
+                loadBtn.disabled = false;
+                loadBtn.textContent = 'Load Page';
+            }
+        });
+
+        loadSegments({{ segments | tojson }});
+    </script>
+</body>
+</html>
