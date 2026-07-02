@@ -1,0 +1,30 @@
+[
+    {
+        "title": "Regarding RAG Systems",
+        "text": "In today's podcast environment, Anthropic has suggested that for Claude models, if your knowledge base is smaller than 200,000 tokens (about 500 pages of material), you can simply include the entire knowledge base in the prompt that you give to the model without needing any additional methods like RAG or similar techniques. It would be amazing if other model developers could provide similar guidance for their models as well."
+    },
+    {
+        "title": "Understanding a Basic Architecture of a RAG System",
+        "text": "In a Retrieval-Augmented Generation (RAG) system, which stands for Retrieval-Augmented Generation, there are two key components: a retriever and a generator. The retriever retrieves information from external memory sources, such as databases, while the generator generates a response based on this retrieved information. Figure 6-2 in Chapter 6 illustrates a basic architecture of a RAG system."
+    },
+    {
+        "title": "Training Methods for RAG Systems",
+        "text": "Originally, Lewis et al. trained both the retriever and the generative model together in their research paper. However, in current RAG systems, these two components are often trained separately, with many teams using off-the-shelf solutions for their retrieval and generation capabilities. Finetuning the entire RAG system end-to-end significantly improves its performance."
+    },
+    {
+        "title": "The Importance of a Quality Retriever",
+        "text": "The success of a RAG system hinges on the quality of its retriever, which has two main functions: indexing and querying. Indexing involves processing data to allow quick access later, while querying requires sending requests to retrieve relevant information based on these indexed details. The methods used for indexing depend entirely on how you plan to retrieve or use this information in the future."
+    },
+    {
+        "title": "Operation of a RAG System",
+        "text": "To better understand a RAG system's functionality, let’s consider an example of its operation. Imagine that our external memory is composed of company documents, such as memos, contracts, and meeting notes. Simplifying things further, assume we have 256 pages worth of materials at hand. If you’re working with this amount, simply including everything in the prompt would likely suffice without needing any additional RAG techniques."
+    },
+    {
+        "title": "Practical Implementation of a RAG System",
+        "text": "As for how a RAG system works in practice, Lewis et al.’s original paper used both components together to train their model. In today’s scenario where these two processes are often trained separately, finetuning the entire system end-to-end usually provides better results compared to other methods like using pre-trained models and training only on downstream tasks."
+    },
+    {
+        "title": "Performance of a RAG System",
+        "text": "The performance of a RAG system heavily relies on its retriever's quality because indexing plays a crucial role in ensuring that information can be retrieved efficiently. Depending on your usage scenario, different indexing techniques may be more suitable, such as vector-based or keyword matching methods, depending on the nature of the data you’re working with and how frequently it changes."
+    }
+]
